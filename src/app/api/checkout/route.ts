@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
@@ -71,11 +71,12 @@ export async function POST(req: NextRequest) {
     const total = calculateTotal(subtotal, tax, shipping);
     
     // Create or update shipping address
+    const { type, ...addressData } = validatedData.shippingAddress;
     let shippingAddress = await prisma.address.create({
       data: {
         userId: session.user.id,
-        type: 'SHIPPING',
-        ...validatedData.shippingAddress,
+        type: type || 'SHIPPING',
+        ...addressData,
       },
     });
     
@@ -144,15 +145,19 @@ export async function POST(req: NextRequest) {
     }, {} as Record<string, typeof cart.items>);
     
     // Create orders for each store
+    const storeCount = Object.keys(itemsByStore).length;
+    
     for (const [storeId, items] of Object.entries(itemsByStore)) {
       const storeSubtotal = items.reduce((sum, item) => {
         const price = item.variant?.price || item.product.price;
         return sum + price * item.quantity;
       }, 0);
       
-      const storeTax = calculateTax(storeSubtotal, taxRate);
-      const storeShipping = storeSubtotal >= freeShippingThreshold ? 0 : shippingFee / Object.keys(itemsByStore).length;
-      const storeTotal = calculateTotal(storeSubtotal, storeTax, storeShipping);
+      // Proportionally distribute tax and shipping based on store's share of subtotal
+      const storeShareOfTotal = storeSubtotal / subtotal;
+      const storeTax = tax * storeShareOfTotal;
+      const storeShipping = shipping * storeShareOfTotal;
+      const storeTotal = storeSubtotal + storeTax + storeShipping;
       
       // Create order
       const order = await prisma.order.create({

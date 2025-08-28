@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { paymentSettingsSchema } from '@/lib/validations/settings';
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     const validatedData = paymentSettingsSchema.parse(body);
     
     // Update settings in database
-    const updates = [
+    const updates: Array<{ key: string; value: any; group: string }> = [
       { key: 'currency', value: validatedData.currency, group: 'payment' },
       { key: 'tax_rate', value: validatedData.tax_rate, group: 'payment' },
     ];
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (validatedData.stripe_public_key) {
       updates.push({
         key: 'stripe_public_key',
-        value: validatedData.stripe_public_key,
+        value: validatedData.stripe_public_key as any,
         group: 'payment',
       });
     }
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     if (validatedData.stripe_secret_key) {
       updates.push({
         key: 'stripe_secret_key',
-        value: validatedData.stripe_secret_key,
+        value: validatedData.stripe_secret_key as any,
         group: 'payment',
       });
     }

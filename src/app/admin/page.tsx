@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardStats } from '@/components/admin/dashboard-stats';
@@ -12,60 +14,75 @@ export const metadata: Metadata = {
 };
 
 async function getDashboardData() {
-  const [
-    totalUsers,
-    totalProducts,
-    totalOrders,
-    totalRevenue,
-    recentOrders,
-    topProducts,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.product.count(),
-    prisma.order.count(),
-    prisma.order.aggregate({
-      _sum: {
-        total: true,
-      },
-    }),
-    prisma.order.findMany({
-      take: 5,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        user: true,
-        items: true,
-      },
-    }),
-    prisma.product.findMany({
-      take: 5,
-      orderBy: {
-        sales: 'desc',
-      },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        sales: true,
-        rating: true,
-        images: {
-          take: 1,
-        },
-      },
-    }),
-  ]);
-
-  return {
-    stats: {
+  try {
+    const [
       totalUsers,
       totalProducts,
       totalOrders,
-      totalRevenue: totalRevenue._sum.total || 0,
-    },
-    recentOrders,
-    topProducts,
-  };
+      totalRevenue,
+      recentOrders,
+      topProducts,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.product.count(),
+      prisma.order.count(),
+      prisma.order.aggregate({
+        _sum: {
+          total: true,
+        },
+      }),
+      prisma.order.findMany({
+        take: 5,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          user: true,
+          items: true,
+        },
+      }),
+      prisma.product.findMany({
+        take: 5,
+        orderBy: {
+          sales: 'desc',
+        },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          sales: true,
+          rating: true,
+          images: {
+            take: 1,
+          },
+        },
+      }),
+    ]);
+
+    return {
+      stats: {
+        totalUsers,
+        totalProducts,
+        totalOrders,
+        totalRevenue: totalRevenue._sum.total || 0,
+      },
+      recentOrders,
+      topProducts,
+    };
+  } catch (error) {
+    console.error('Failed to fetch dashboard data:', error);
+    // Return default values when database is not available
+    return {
+      stats: {
+        totalUsers: 0,
+        totalProducts: 0,
+        totalOrders: 0,
+        totalRevenue: 0,
+      },
+      recentOrders: [],
+      topProducts: [],
+    };
+  }
 }
 
 export default async function AdminDashboard() {
