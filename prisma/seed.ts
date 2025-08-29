@@ -4,230 +4,257 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create Super Admin
-  const hashedPassword = await bcrypt.hash('SuperAdmin@123!', 12);
-  
-  const superAdmin = await prisma.user.upsert({
-    where: { email: 'superadmin@daddyscart.com' },
+  console.log('Starting database seed...');
+
+  // Create admin user
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@daddyscart.com' },
     update: {},
     create: {
-      email: 'superadmin@daddyscart.com',
-      password: hashedPassword,
-      name: 'Super Administrator',
-      role: 'SUPER_ADMIN',
+      email: 'admin@daddyscart.com',
+      password: adminPassword,
+      name: 'Admin User',
+      role: 'ADMIN',
       emailVerified: new Date(),
+    },
+  });
+
+  console.log('Created admin user:', admin.email);
+
+  // Create categories
+  const categories = await Promise.all([
+    prisma.category.upsert({
+      where: { slug: 'electronics' },
+      update: {},
+      create: {
+        name: 'Electronics',
+        slug: 'electronics',
+        description: 'Electronic devices and accessories',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'clothing' },
+      update: {},
+      create: {
+        name: 'Clothing',
+        slug: 'clothing',
+        description: 'Fashion and apparel',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'home-garden' },
+      update: {},
+      create: {
+        name: 'Home & Garden',
+        slug: 'home-garden',
+        description: 'Home decor and garden supplies',
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'sports' },
+      update: {},
+      create: {
+        name: 'Sports & Outdoors',
+        slug: 'sports',
+        description: 'Sports equipment and outdoor gear',
+      },
+    }),
+  ]);
+
+  console.log('Created categories:', categories.length);
+
+  // Create brands
+  const brands = await Promise.all([
+    prisma.brand.upsert({
+      where: { slug: 'apple' },
+      update: {},
+      create: {
+        name: 'Apple',
+        slug: 'apple',
+        description: 'Premium electronics and devices',
+        website: 'https://apple.com',
+      },
+    }),
+    prisma.brand.upsert({
+      where: { slug: 'samsung' },
+      update: {},
+      create: {
+        name: 'Samsung',
+        slug: 'samsung',
+        description: 'Electronics and home appliances',
+        website: 'https://samsung.com',
+      },
+    }),
+    prisma.brand.upsert({
+      where: { slug: 'nike' },
+      update: {},
+      create: {
+        name: 'Nike',
+        slug: 'nike',
+        description: 'Athletic footwear and apparel',
+        website: 'https://nike.com',
+      },
+    }),
+  ]);
+
+  console.log('Created brands:', brands.length);
+
+  // Create vendor user
+  const vendorPassword = await bcrypt.hash('vendor123', 10);
+  const vendor = await prisma.user.upsert({
+    where: { email: 'vendor@daddyscart.com' },
+    update: {},
+    create: {
+      email: 'vendor@daddyscart.com',
+      password: vendorPassword,
+      name: 'Demo Vendor',
+      role: 'VENDOR',
+      emailVerified: new Date(),
+    },
+  });
+
+  // Create store for vendor
+  const store = await prisma.store.upsert({
+    where: { slug: 'demo-store' },
+    update: {},
+    create: {
+      name: 'Demo Store',
+      slug: 'demo-store',
+      description: 'Your one-stop shop for quality products',
+      userId: vendor.id,
       isActive: true,
+      isVerified: true,
+      businessName: 'Demo Store LLC',
+      businessEmail: 'business@demostore.com',
+      businessPhone: '+1234567890',
     },
   });
 
-  console.log('Super Admin created:', { 
-    id: superAdmin.id, 
-    email: superAdmin.email,
-    password: 'SuperAdmin@123!' 
-  });
+  console.log('Created store:', store.name);
 
-  // Create default categories
-  const categories = [
-    { name: 'Electronics', slug: 'electronics', description: 'Electronic devices and accessories' },
-    { name: 'Clothing', slug: 'clothing', description: 'Fashion and apparel' },
-    { name: 'Home & Garden', slug: 'home-garden', description: 'Home decor and garden supplies' },
-    { name: 'Sports & Outdoors', slug: 'sports-outdoors', description: 'Sports equipment and outdoor gear' },
-    { name: 'Books', slug: 'books', description: 'Books and educational materials' },
-    { name: 'Toys & Games', slug: 'toys-games', description: 'Toys, games, and entertainment' },
-    { name: 'Health & Beauty', slug: 'health-beauty', description: 'Health and beauty products' },
-    { name: 'Food & Beverages', slug: 'food-beverages', description: 'Food items and drinks' },
-    { name: 'Automotive', slug: 'automotive', description: 'Auto parts and accessories' },
-    { name: 'Jewelry', slug: 'jewelry', description: 'Jewelry and watches' },
-  ];
+  // Create sample products
+  const products = await Promise.all([
+    prisma.product.create({
+      data: {
+        name: 'iPhone 15 Pro',
+        slug: 'iphone-15-pro',
+        description: 'The latest iPhone with advanced features and stunning design.',
+        price: 999.99,
+        compareAtPrice: 1099.99,
+        quantity: 50,
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        storeId: store.id,
+        categoryId: categories[0].id, // Electronics
+        brandId: brands[0].id, // Apple
+        images: {
+          create: [
+            {
+              url: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569',
+              alt: 'iPhone 15 Pro',
+              position: 0,
+            },
+          ],
+        },
+      },
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Samsung Galaxy S24',
+        slug: 'samsung-galaxy-s24',
+        description: 'Premium Android smartphone with cutting-edge technology.',
+        price: 899.99,
+        compareAtPrice: 999.99,
+        quantity: 30,
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        storeId: store.id,
+        categoryId: categories[0].id, // Electronics
+        brandId: brands[1].id, // Samsung
+        images: {
+          create: [
+            {
+              url: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c',
+              alt: 'Samsung Galaxy S24',
+              position: 0,
+            },
+          ],
+        },
+      },
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Nike Air Max 270',
+        slug: 'nike-air-max-270',
+        description: 'Comfortable and stylish running shoes for everyday wear.',
+        price: 149.99,
+        compareAtPrice: 179.99,
+        quantity: 100,
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        storeId: store.id,
+        categoryId: categories[3].id, // Sports
+        brandId: brands[2].id, // Nike
+        images: {
+          create: [
+            {
+              url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
+              alt: 'Nike Air Max 270',
+              position: 0,
+            },
+          ],
+        },
+      },
+    }),
+  ]);
 
-  for (const category of categories) {
-    await prisma.category.upsert({
-      where: { slug: category.slug },
+  console.log('Created products:', products.length);
+
+  // Create system settings
+  const settings = await Promise.all([
+    prisma.setting.upsert({
+      where: { key: 'site_name' },
       update: {},
-      create: category,
-    });
-  }
-
-  console.log('Categories created');
-
-  // Create default settings
-  const defaultSettings = [
-    {
-      key: 'site_name',
-      value: JSON.stringify('Daddy\'s Cart Marketplace'),
-      description: 'The name of the marketplace',
-      group: 'general',
-    },
-    {
-      key: 'site_description',
-      value: JSON.stringify('Your premier online marketplace for everything you need'),
-      description: 'Site description for SEO',
-      group: 'general',
-    },
-    {
-      key: 'currency',
-      value: JSON.stringify({ code: 'USD', symbol: '$' }),
-      description: 'Default currency',
-      group: 'payment',
-    },
-    {
-      key: 'tax_rate',
-      value: JSON.stringify(0.08),
-      description: 'Default tax rate (8%)',
-      group: 'payment',
-    },
-    {
-      key: 'shipping_fee',
-      value: JSON.stringify(5.99),
-      description: 'Default shipping fee',
-      group: 'shipping',
-    },
-    {
-      key: 'free_shipping_threshold',
-      value: JSON.stringify(50),
-      description: 'Order amount for free shipping',
-      group: 'shipping',
-    },
-    {
-      key: 'commission_rate',
-      value: JSON.stringify(0.10),
-      description: 'Platform commission rate (10%)',
-      group: 'vendor',
-    },
-    {
-      key: 'stripe_public_key',
-      value: JSON.stringify(''),
-      description: 'Stripe publishable key',
-      group: 'payment',
-    },
-    {
-      key: 'stripe_secret_key',
-      value: JSON.stringify(''),
-      description: 'Stripe secret key',
-      group: 'payment',
-    },
-    {
-      key: 'smtp_host',
-      value: JSON.stringify('smtp.gmail.com'),
-      description: 'SMTP server host',
-      group: 'email',
-    },
-    {
-      key: 'smtp_port',
-      value: JSON.stringify(587),
-      description: 'SMTP server port',
-      group: 'email',
-    },
-    {
-      key: 'smtp_user',
-      value: JSON.stringify(''),
-      description: 'SMTP username',
-      group: 'email',
-    },
-    {
-      key: 'smtp_password',
-      value: JSON.stringify(''),
-      description: 'SMTP password',
-      group: 'email',
-    },
-    {
-      key: 'contact_email',
-      value: JSON.stringify('contact@daddyscart.com'),
-      description: 'Contact email address',
-      group: 'general',
-    },
-    {
-      key: 'support_email',
-      value: JSON.stringify('support@daddyscart.com'),
-      description: 'Support email address',
-      group: 'general',
-    },
-    {
-      key: 'maintenance_mode',
-      value: JSON.stringify(false),
-      description: 'Enable/disable maintenance mode',
-      group: 'general',
-    },
-    {
-      key: 'allow_vendor_registration',
-      value: JSON.stringify(true),
-      description: 'Allow vendors to register',
-      group: 'vendor',
-    },
-    {
-      key: 'require_vendor_approval',
-      value: JSON.stringify(true),
-      description: 'Require admin approval for vendor accounts',
-      group: 'vendor',
-    },
-    {
-      key: 'max_product_images',
-      value: JSON.stringify(10),
-      description: 'Maximum number of images per product',
-      group: 'product',
-    },
-    {
-      key: 'enable_reviews',
-      value: JSON.stringify(true),
-      description: 'Enable product reviews',
-      group: 'product',
-    },
-    {
-      key: 'enable_wishlist',
-      value: JSON.stringify(true),
-      description: 'Enable wishlist feature',
-      group: 'features',
-    },
-    {
-      key: 'google_analytics_id',
-      value: JSON.stringify(''),
-      description: 'Google Analytics tracking ID',
-      group: 'analytics',
-    },
-    {
-      key: 'facebook_pixel_id',
-      value: JSON.stringify(''),
-      description: 'Facebook Pixel ID',
-      group: 'analytics',
-    },
-  ];
-
-  for (const setting of defaultSettings) {
-    await prisma.setting.upsert({
-      where: { key: setting.key },
+      create: {
+        key: 'site_name',
+        value: '"Daddy\'s Cart Marketplace"',
+        description: 'The name of the marketplace',
+        group: 'general',
+      },
+    }),
+    prisma.setting.upsert({
+      where: { key: 'free_shipping_threshold' },
       update: {},
-      create: setting,
-    });
-  }
-
-  console.log('Default settings created');
-
-  // Create some sample brands
-  const brands = [
-    { name: 'Apple', slug: 'apple', website: 'https://apple.com' },
-    { name: 'Samsung', slug: 'samsung', website: 'https://samsung.com' },
-    { name: 'Nike', slug: 'nike', website: 'https://nike.com' },
-    { name: 'Adidas', slug: 'adidas', website: 'https://adidas.com' },
-    { name: 'Sony', slug: 'sony', website: 'https://sony.com' },
-  ];
-
-  for (const brand of brands) {
-    await prisma.brand.upsert({
-      where: { slug: brand.slug },
+      create: {
+        key: 'free_shipping_threshold',
+        value: '50',
+        description: 'Minimum order amount for free shipping',
+        group: 'shipping',
+      },
+    }),
+    prisma.setting.upsert({
+      where: { key: 'tax_rate' },
       update: {},
-      create: brand,
-    });
-  }
+      create: {
+        key: 'tax_rate',
+        value: '0.08',
+        description: 'Default tax rate (8%)',
+        group: 'payment',
+      },
+    }),
+  ]);
 
-  console.log('Sample brands created');
+  console.log('Created settings:', settings.length);
+
+  console.log('Database seed completed successfully!');
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
+  .catch((e) => {
+    console.error('Error seeding database:', e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
