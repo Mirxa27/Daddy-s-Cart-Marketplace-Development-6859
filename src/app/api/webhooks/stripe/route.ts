@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
+import { sendOrderConfirmationEmail, sendOrderShippedEmail } from '@/lib/email';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
@@ -48,17 +49,41 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          // Update product inventory
+          // Update product inventory and variant inventory
           const orderItems = await prisma.orderItem.findMany({
             where: { orderId: order.id },
+            include: {
+              product: true,
+              variant: true,
+            },
           });
 
           for (const item of orderItems) {
+            // Update product sales and inventory
             await prisma.product.update({
               where: { id: item.productId },
               data: {
                 quantity: { decrement: item.quantity },
                 sales: { increment: item.quantity },
+                views: { increment: 1 }, // Increment views as well
+              },
+            });
+
+            // Update variant inventory if applicable
+            if (item.variantId) {
+              await prisma.productVariant.update({
+                where: { id: item.variantId },
+                data: {
+                  quantity: { decrement: item.quantity },
+                },
+              });
+            }
+
+            // Update store total sales
+            await prisma.store.update({
+              where: { id: item.product.storeId },
+              data: {
+                totalSales: { increment: item.quantity },
               },
             });
           }
@@ -74,7 +99,41 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // TODO: Send order confirmation email
+          // Send order confirmation email
+          try {
+            const orderWithDetails = await prisma.order.findUnique({
+              where: { id: order.id },
+              include: {
+                user: true,
+                items: {
+                  include: {
+                    product: true,
+                    variant: true,
+                  },
+                },
+                shippingAddress: true,
+              },
+            });
+
+            if (orderWithDetails) {
+              await sendOrderConfirmationEmail(orderWithDetails);
+              console.log(`Order confirmation email sent for order ${order.orderNumber}`);
+            }
+          } catch (emailError) {
+            console.error('Failed to send order confirmation email:', emailError);
+            // Don't fail the webhook if email sending fails
+          }
+
+          // Create notification for user
+          await prisma.notification.create({
+            data: {
+              userId: order.userId,
+              type: 'ORDER',
+              title: 'Order Confirmed',
+              message: `Your order #${order.orderNumber} has been confirmed and is being processed.`,
+              link: `/orders/${order.orderNumber}`,
+            },
+          });
         }
         break;
       }
