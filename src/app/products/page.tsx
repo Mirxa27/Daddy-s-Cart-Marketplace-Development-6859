@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { MainNav } from '@/components/layout/main-nav';
 import { Footer } from '@/components/layout/footer';

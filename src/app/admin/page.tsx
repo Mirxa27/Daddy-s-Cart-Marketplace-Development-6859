@@ -6,7 +6,6 @@ import { DashboardStats } from '@/components/admin/dashboard-stats';
 import { RecentOrders } from '@/components/admin/recent-orders';
 import { SalesChart } from '@/components/admin/sales-chart';
 import { TopProducts } from '@/components/admin/top-products';
-import { AdminAnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -18,6 +17,35 @@ export const metadata: Metadata = {
 };
 
 async function getDashboardData() {
+  // Return mock data during build or when database is unavailable
+  if (process.env.NODE_ENV === 'development' && !process.env.DATABASE_URL) {
+    return {
+      stats: {
+        totalUsers: 1250,
+        totalProducts: 450,
+        totalOrders: 89,
+        totalRevenue: 12450.00,
+        totalStores: 25,
+        changes: {
+          users: 15.3,
+          products: 8.2,
+          orders: 12.5,
+          revenue: 18.7,
+        },
+      },
+      recentOrders: [],
+      topProducts: [],
+      salesByDay: [],
+      ordersByStatus: [
+        { status: 'PENDING', count: 5 },
+        { status: 'PROCESSING', count: 12 },
+        { status: 'SHIPPED', count: 8 },
+        { status: 'DELIVERED', count: 45 },
+        { status: 'CANCELLED', count: 2 },
+      ],
+    };
+  }
+
   try {
     // Get current period (last 30 days)
     const startDate = new Date();

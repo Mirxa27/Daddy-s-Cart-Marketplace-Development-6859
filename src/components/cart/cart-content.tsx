@@ -16,14 +16,14 @@ import toast from 'react-hot-toast';
 interface CartItem {
   id: string;
   productId: string;
-  variantId?: string;
+  variantId?: string | null;
   quantity: number;
   product: {
     id: string;
     name: string;
     slug: string;
     price: number;
-    images?: Array<{ url: string; alt?: string }>;
+    images?: Array<{ url: string; alt?: string | null }>;
     store: { name: string; slug: string };
     quantity: number;
     status: string;
@@ -61,7 +61,7 @@ export function CartContent() {
         setCartItems(localCartItems.map(item => ({
           id: item.id,
           productId: item.productId,
-          variantId: item.variantId,
+          variantId: item.variantId || null,
           quantity: item.quantity,
           product: {
             id: item.productId,
@@ -85,7 +85,7 @@ export function CartContent() {
       setCartItems(localCartItems.map(item => ({
         id: item.id,
         productId: item.productId,
-        variantId: item.variantId,
+        variantId: item.variantId || null,
         quantity: item.quantity,
         product: {
           id: item.productId,
@@ -102,7 +102,7 @@ export function CartContent() {
     }
   };
 
-  const handleUpdateQuantity = async (itemId: string, newQuantity: number, productId: string, variantId?: string) => {
+  const handleUpdateQuantity = async (itemId: string, newQuantity: number, productId: string, variantId?: string | null) => {
     if (newQuantity < 1) return;
 
     setUpdating(itemId);
@@ -136,7 +136,7 @@ export function CartContent() {
     }
   };
 
-  const handleRemoveItem = async (itemId: string, productId: string, variantId?: string) => {
+  const handleRemoveItem = async (itemId: string, productId: string, variantId?: string | null) => {
     try {
       const response = await fetch(`/api/cart/${itemId}`, {
         method: 'DELETE',
@@ -338,7 +338,7 @@ export function CartContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleRemoveItem(item.id, item.productId, item.variantId)}
+                    onClick={() => handleRemoveItem(item.id, item.productId, item.variantId || undefined)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -353,7 +353,7 @@ export function CartContent() {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.productId, item.variantId)}
+                    onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.productId, item.variantId || undefined)}
                     disabled={item.quantity <= 1 || updating === item.id}
                     className="h-8 w-8 touch-target"
                   >
@@ -368,7 +368,7 @@ export function CartContent() {
                     onChange={(e) => {
                       const newQuantity = parseInt(e.target.value) || 1;
                       if (newQuantity !== item.quantity) {
-                        handleUpdateQuantity(item.id, newQuantity, item.productId, item.variantId);
+                        handleUpdateQuantity(item.id, newQuantity, item.productId, item.variantId || undefined);
                       }
                     }}
                     className="w-16 text-center"
@@ -378,7 +378,7 @@ export function CartContent() {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.productId, item.variantId)}
+                    onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.productId, item.variantId || undefined)}
                     disabled={item.quantity >= item.product.quantity || updating === item.id}
                     className="h-8 w-8 touch-target"
                   >
@@ -410,7 +410,7 @@ export function CartContent() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveItem(item.id, item.productId, item.variantId)}
+                    onClick={() => handleRemoveItem(item.id, item.productId, item.variantId || undefined)}
                     className="text-destructive hover:text-destructive text-xs"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />

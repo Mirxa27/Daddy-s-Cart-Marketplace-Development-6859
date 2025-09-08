@@ -152,58 +152,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Maintenance mode check
-  if (pathname !== '/admin' && !pathname.startsWith('/api/')) {
-    try {
-      const maintenanceMode = await prisma?.setting.findUnique({
-        where: { key: 'maintenance_mode' },
-      });
-      
-      if (maintenanceMode && JSON.parse(maintenanceMode.value as string) === true) {
-        const token = await getToken({
-          req: request,
-          secret: process.env.NEXTAUTH_SECRET,
-        });
-        
-        // Allow admins to access during maintenance
-        if (!token || !['ADMIN', 'SUPER_ADMIN'].includes(token.role as string)) {
-          return new NextResponse(
-            `<!DOCTYPE html>
-            <html>
-            <head>
-              <title>Maintenance Mode</title>
-              <meta name="viewport" content="width=device-width, initial-scale=1">
-              <style>
-                body { font-family: system-ui; text-align: center; padding: 50px; background: #f5f5f5; }
-                .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                h1 { color: #333; margin-bottom: 20px; }
-                p { color: #666; line-height: 1.6; }
-                .logo { font-size: 24px; font-weight: bold; color: #667eea; margin-bottom: 30px; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="logo">Daddy's Cart</div>
-                <h1>We'll be back soon!</h1>
-                <p>We're currently performing scheduled maintenance to improve your shopping experience.</p>
-                <p>Please check back in a few minutes.</p>
-              </div>
-            </body>
-            </html>`,
-            {
-              status: 503,
-              headers: {
-                'Content-Type': 'text/html',
-                'Retry-After': '3600', // 1 hour
-              },
-            }
-          );
-        }
-      }
-    } catch (error) {
-      // If we can't check maintenance mode, continue normally
-    }
-  }
+  // Skip maintenance mode check during build or if no database
+  // This will be handled at the application level instead
 
   return response;
 }

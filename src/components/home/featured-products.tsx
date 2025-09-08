@@ -16,12 +16,12 @@ interface Product {
   name: string;
   slug: string;
   price: number;
-  compareAtPrice?: number;
+  compareAtPrice?: number | null;
   rating: number;
   reviewCount: number;
-  images: Array<{ url: string; alt?: string }>;
-  category: { name: string; slug: string };
-  store: { name: string; slug: string };
+  images?: Array<{ url: string; alt?: string | null }>;
+  category?: { name: string; slug: string };
+  store?: { name: string; slug: string; rating?: number | null };
   quantity: number;
   status: string;
 }
@@ -285,8 +285,8 @@ export function FeaturedProducts({ products: initialProducts, limit = 8 }: Featu
                   </Link>
                   
                   <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-muted-foreground">{product.category.name}</p>
-                    <p className="text-xs text-muted-foreground">by {product.store.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.category?.name || 'General'}</p>
+                    <p className="text-xs text-muted-foreground">by {product.store?.name || 'Store'}</p>
                   </div>
                   
                   {/* Rating */}

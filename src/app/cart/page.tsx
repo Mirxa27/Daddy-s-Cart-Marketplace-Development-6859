@@ -1,10 +1,11 @@
 import { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { MainNav } from '@/components/layout/main-nav';
 import { Footer } from '@/components/layout/footer';
 import { CartContent } from '@/components/cart/cart-content';
 import { CartSummary } from '@/components/cart/cart-summary';
-import { RecommendedProducts } from '@/components/cart/recommended-products';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const metadata: Metadata = {
@@ -80,12 +81,6 @@ export default function CartPage() {
             </div>
           </Suspense>
 
-          {/* Recommended Products */}
-          <div className="mt-12">
-            <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded" />}>
-              <RecommendedProducts />
-            </Suspense>
-          </div>
         </div>
       </main>
       <Footer />

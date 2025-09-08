@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
+import { prisma } from './prisma';
 
 // Custom error classes
 export class ValidationError extends Error {
@@ -252,5 +253,8 @@ export function withErrorHandling(
 export async function withTransaction<T>(
   operation: (tx: any) => Promise<T>
 ): Promise<T> {
+  if (!prisma) {
+    throw new Error('Database not available');
+  }
   return await prisma.$transaction(operation);
 }

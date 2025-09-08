@@ -15,12 +15,13 @@ interface Product {
   name: string;
   slug: string;
   price: number;
-  compareAtPrice?: number;
+  compareAtPrice?: number | null;
   rating: number;
   reviewCount: number;
-  images: Array<{ url: string; alt?: string }>;
-  category: { name: string; slug: string };
-  store: { name: string; slug: string; rating?: number };
+  images?: Array<{ url: string; alt?: string | null }>;
+  category?: { name: string; slug: string };
+  brand?: { name: string; slug: string } | null;
+  store?: { name: string; slug: string; rating?: number | null };
   quantity: number;
   status: string;
   variants?: Array<{ id: string; name: string; price: number }>;

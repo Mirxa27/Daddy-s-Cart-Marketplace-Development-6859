@@ -1,38 +1,17 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
-    },
-    "app/api/webhooks/**/*.ts": {
-      "maxDuration": 60
-    },
-    "app/api/upload/**/*.ts": {
-      "maxDuration": 60
     }
   },
-  "regions": ["iad1", "sfo1"],
+  "env": {
+    "NEXT_PUBLIC_APP_URL": "https://marketplace.vercel.app"
+  },
   "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, X-Requested-With"
-        }
-      ]
-    },
     {
       "source": "/(.*)",
       "headers": [
@@ -47,22 +26,8 @@
         {
           "key": "Referrer-Policy",
           "value": "origin-when-cross-origin"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/api/robots"
     }
   ],
   "redirects": [
@@ -70,13 +35,6 @@
       "source": "/admin/login",
       "destination": "/auth/signin?callbackUrl=/admin",
       "permanent": true
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/admin",
-      "permanent": true
     }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  ]
 }

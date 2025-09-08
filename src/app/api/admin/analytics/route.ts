@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
     const prevStartDate = new Date(startDate);
     prevStartDate.setDate(prevStartDate.getDate() - parseInt(period));
     
-    const prevOrderWhere = {
+    const prevOrderWhere: any = {
       createdAt: {
         gte: prevStartDate,
         lt: startDate,
