@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Mail } from 'lucide-react';
+import { Send, Mail, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import toast from 'react-hot-toast';
@@ -18,16 +18,36 @@ export function Newsletter() {
       toast.error('Please enter your email');
       return;
     }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
     
     setLoading(true);
     
     try {
-      // TODO: Implement actual newsletter subscription
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to subscribe');
+      }
+      
       toast.success('Successfully subscribed to newsletter!');
       setEmail('');
     } catch (error) {
-      toast.error('Failed to subscribe. Please try again.');
+      console.error('Newsletter subscription error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to subscribe. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -64,16 +84,26 @@ export function Newsletter() {
               onChange={(e) => setEmail(e.target.value)}
               className="flex-1 bg-primary-foreground text-primary"
               disabled={loading}
+              required
             />
             <Button
               type="submit"
               size="lg"
               variant="secondary"
-              loading={loading}
-              className="whitespace-nowrap"
+              disabled={loading}
+              className="whitespace-nowrap touch-target"
             >
-              <Send className="h-4 w-4 mr-2" />
-              Subscribe
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Subscribing...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Subscribe
+                </>
+              )}
             </Button>
           </form>
           

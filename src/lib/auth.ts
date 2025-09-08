@@ -95,8 +95,15 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user }) {
-      // Log sign in event
-      console.log(`User ${user.email} signed in`);
+      const { logger } = await import('@/lib/logger');
+      logger.userAction('sign_in', user.id || 'unknown', {
+        email: user.email,
+        provider: 'credentials',
+      });
+    },
+    async signOut({ session }) {
+      const { logger } = await import('@/lib/logger');
+      logger.userAction('sign_out', session?.user?.id || 'unknown');
     },
   },
   debug: process.env.NODE_ENV === 'development',

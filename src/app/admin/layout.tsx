@@ -9,25 +9,26 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    // Check if user is admin or super admin
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-      redirect('/');
-    }
-  } catch (error) {
-    // If auth check fails (e.g., during build), allow rendering
-    console.log('Auth check skipped during build');
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    redirect('/auth/signin?callbackUrl=/admin');
+  }
+  
+  // Check if user has admin access
+  if (!['ADMIN', 'SUPER_ADMIN', 'VENDOR'].includes(session.user.role)) {
+    redirect('/?error=unauthorized');
   }
   
   return (
     <div className="flex h-screen bg-muted/30">
-      <AdminSidebar />
+      <AdminSidebar userRole={session.user.role} userId={session.user.id} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminHeader />
+        <AdminHeader user={session.user} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          {children}
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

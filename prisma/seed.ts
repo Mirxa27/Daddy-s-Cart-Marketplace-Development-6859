@@ -10,10 +10,10 @@ async function main() {
   const hashedPassword = await bcrypt.hash(process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin123!', 12);
   
   const superAdmin = await prisma.user.upsert({
-    where: { email: process.env.SUPER_ADMIN_EMAIL || 'admin@sourcekom.com' },
+    where: { email: process.env.SUPER_ADMIN_EMAIL || 'admin@marketplace.vercel.app' },
     update: {},
     create: {
-      email: process.env.SUPER_ADMIN_EMAIL || 'admin@sourcekom.com',
+      email: process.env.SUPER_ADMIN_EMAIL || 'admin@marketplace.vercel.app',
       name: 'Super Administrator',
       password: hashedPassword,
       role: Role.SUPER_ADMIN,
@@ -149,10 +149,10 @@ async function main() {
   const vendorPassword = await bcrypt.hash('VendorPass123!', 12);
   
   const vendor1 = await prisma.user.upsert({
-    where: { email: 'vendor1@sourcekom.com' },
+    where: { email: 'vendor1@marketplace.vercel.app' },
     update: {},
     create: {
-      email: 'vendor1@sourcekom.com',
+      email: 'vendor1@marketplace.vercel.app',
       name: 'Tech Store Vendor',
       password: vendorPassword,
       role: Role.VENDOR,
@@ -163,10 +163,10 @@ async function main() {
   });
 
   const vendor2 = await prisma.user.upsert({
-    where: { email: 'vendor2@sourcekom.com' },
+    where: { email: 'vendor2@marketplace.vercel.app' },
     update: {},
     create: {
-      email: 'vendor2@sourcekom.com',
+      email: 'vendor2@marketplace.vercel.app',
       name: 'Fashion Store Vendor',
       password: vendorPassword,
       role: Role.VENDOR,
@@ -676,13 +676,13 @@ async function main() {
       },
       {
         key: 'contact_email',
-        value: JSON.stringify('contact@sourcekom.com'),
+        value: JSON.stringify('contact@marketplace.vercel.app'),
         description: 'Contact email address',
         group: 'general',
       },
       {
         key: 'support_email',
-        value: JSON.stringify('support@sourcekom.com'),
+        value: JSON.stringify('support@marketplace.vercel.app'),
         description: 'Support email address',
         group: 'general',
       },
@@ -723,13 +723,16 @@ async function main() {
 
   console.log('🎉 Database seeding completed successfully!');
   console.log('');
+  console.log('🌐 Marketplace URL: https://marketplace.vercel.app');
+  console.log('');
   console.log('📧 Super Admin Credentials:');
-  console.log(`Email: ${process.env.SUPER_ADMIN_EMAIL || 'admin@sourcekom.com'}`);
+  console.log(`Email: ${process.env.SUPER_ADMIN_EMAIL || 'admin@marketplace.vercel.app'}`);
   console.log(`Password: ${process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin123!'}`);
+  console.log(`Dashboard: ${process.env.NEXT_PUBLIC_APP_URL || 'https://marketplace.vercel.app'}/admin`);
   console.log('');
   console.log('🏪 Vendor Credentials:');
-  console.log('Email: vendor1@sourcekom.com | Password: VendorPass123!');
-  console.log('Email: vendor2@sourcekom.com | Password: VendorPass123!');
+  console.log('Email: vendor1@marketplace.vercel.app | Password: VendorPass123!');
+  console.log('Email: vendor2@marketplace.vercel.app | Password: VendorPass123!');
   console.log('');
   console.log('👤 User Credentials:');
   console.log('Email: john.doe@example.com | Password: UserPass123!');

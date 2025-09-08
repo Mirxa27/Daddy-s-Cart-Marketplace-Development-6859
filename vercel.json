@@ -1,74 +1,35 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "buildCommand": "npm run vercel-build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": ["iad1"],
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "NEXTAUTH_URL": "@nextauth_url",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "JWT_SECRET": "@jwt_secret",
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key",
-    "STRIPE_SECRET_KEY": "@stripe_secret_key",
-    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
-    "UPLOADTHING_SECRET": "@uploadthing_secret",
-    "UPLOADTHING_APP_ID": "@uploadthing_app_id",
-    "SMTP_HOST": "@smtp_host",
-    "SMTP_PORT": "@smtp_port",
-    "SMTP_USER": "@smtp_user",
-    "SMTP_PASSWORD": "@smtp_password",
-    "SMTP_FROM": "@smtp_from",
-    "GOOGLE_CLIENT_ID": "@google_client_id",
-    "GOOGLE_CLIENT_SECRET": "@google_client_secret"
-  },
-  "build": {
-    "env": {
-      "DATABASE_URL": "@database_url",
-      "NEXTAUTH_SECRET": "@nextauth_secret",
-      "JWT_SECRET": "@jwt_secret"
-    }
-  },
   "functions": {
-    "app/api/admin/settings/[...path]/route.ts": {
+    "app/api/**/*.ts": {
       "maxDuration": 30
     },
-    "app/api/webhooks/stripe/route.ts": {
-      "maxDuration": 30
+    "app/api/webhooks/**/*.ts": {
+      "maxDuration": 60
     },
-    "app/api/products/[...path]/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/orders/[...path]/route.ts": {
-      "maxDuration": 30
+    "app/api/upload/**/*.ts": {
+      "maxDuration": 60
     }
   },
-  "rewrites": [
-    {
-      "source": "/uploads/:path*",
-      "destination": "/api/uploads/:path*"
-    }
-  ],
+  "regions": ["iad1", "sfo1"],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        },
         {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+          "value": "Content-Type, Authorization, X-Requested-With"
         }
       ]
     },
@@ -76,12 +37,16 @@
       "source": "/(.*)",
       "headers": [
         {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
         },
         {
-          "key": "X-Frame-Options",
-          "value": "DENY"
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
         },
         {
           "key": "X-XSS-Protection",
@@ -89,5 +54,29 @@
         }
       ]
     }
-  ]
+  ],
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/robots"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/admin/login",
+      "destination": "/auth/signin?callbackUrl=/admin",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/admin",
+      "permanent": true
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }

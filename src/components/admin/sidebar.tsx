@@ -27,68 +27,91 @@ import {
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  href: string;
+  icon: any;
+  roles?: string[];
+  children?: MenuItem[];
+}
+
+const getMenuItems = (userRole: string): MenuItem[] => [
   {
     title: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
+    roles: ['ADMIN', 'SUPER_ADMIN', 'VENDOR'],
   },
   {
     title: 'Products',
     href: '/admin/products',
     icon: Package,
+    roles: ['ADMIN', 'SUPER_ADMIN', 'VENDOR'],
   },
   {
     title: 'Orders',
     href: '/admin/orders',
     icon: ShoppingCart,
+    roles: ['ADMIN', 'SUPER_ADMIN', 'VENDOR'],
   },
   {
     title: 'Customers',
     href: '/admin/customers',
     icon: Users,
+    roles: ['ADMIN', 'SUPER_ADMIN'],
   },
   {
     title: 'Vendors',
     href: '/admin/vendors',
     icon: Store,
+    roles: ['ADMIN', 'SUPER_ADMIN'],
   },
   {
     title: 'Categories',
     href: '/admin/categories',
     icon: Tag,
+    roles: ['ADMIN', 'SUPER_ADMIN'],
   },
   {
     title: 'Analytics',
     href: '/admin/analytics',
     icon: TrendingUp,
+    roles: ['ADMIN', 'SUPER_ADMIN', 'VENDOR'],
   },
   {
     title: 'Settings',
     href: '/admin/settings',
     icon: Settings,
+    roles: ['ADMIN', 'SUPER_ADMIN'],
     children: [
-      { title: 'General', href: '/admin/settings/general', icon: Globe },
-      { title: 'Payment', href: '/admin/settings/payment', icon: CreditCard },
-      { title: 'Shipping', href: '/admin/settings/shipping', icon: Truck },
-      { title: 'Email', href: '/admin/settings/email', icon: Mail },
-      { title: 'Security', href: '/admin/settings/security', icon: Shield },
-      { title: 'Database', href: '/admin/settings/database', icon: Database },
+      { title: 'General', href: '/admin/settings/general', icon: Globe, roles: ['ADMIN', 'SUPER_ADMIN'] },
+      { title: 'Payment', href: '/admin/settings/payment', icon: CreditCard, roles: ['ADMIN', 'SUPER_ADMIN'] },
+      { title: 'Shipping', href: '/admin/settings/shipping', icon: Truck, roles: ['ADMIN', 'SUPER_ADMIN'] },
+      { title: 'Email', href: '/admin/settings/email', icon: Mail, roles: ['ADMIN', 'SUPER_ADMIN'] },
+      { title: 'Security', href: '/admin/settings/security', icon: Shield, roles: ['SUPER_ADMIN'] },
+      { title: 'Vendor', href: '/admin/settings/vendor', icon: Store, roles: ['ADMIN', 'SUPER_ADMIN'] },
     ],
   },
   {
     title: 'Notifications',
     href: '/admin/notifications',
     icon: Bell,
+    roles: ['ADMIN', 'SUPER_ADMIN', 'VENDOR'],
   },
   {
     title: 'Reports',
     href: '/admin/reports',
     icon: FileText,
+    roles: ['ADMIN', 'SUPER_ADMIN'],
   },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  userRole: string;
+  userId: string;
+}
+
+export function AdminSidebar({ userRole, userId }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -101,24 +124,29 @@ export function AdminSidebar() {
     );
   };
 
+  // Filter menu items based on user role
+  const menuItems = getMenuItems(userRole).filter(item => 
+    !item.roles || item.roles.includes(userRole)
+  );
+
   return (
     <aside
       className={cn(
-        'bg-background border-r transition-all duration-300',
+        'bg-background border-r transition-all duration-300 hidden md:block',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
       <div className="flex h-16 items-center justify-between px-4 border-b">
         {!collapsed && (
           <Link href="/admin" className="text-xl font-bold">
-            Admin Panel
+            {userRole === 'VENDOR' ? 'Vendor Panel' : 'Admin Panel'}
           </Link>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto"
+          className="ml-auto touch-target"
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -136,14 +164,19 @@ export function AdminSidebar() {
             const isExpanded = expandedItems.includes(item.title);
             const hasChildren = item.children && item.children.length > 0;
             
+            // Filter children based on user role
+            const filteredChildren = item.children?.filter(child => 
+              !child.roles || child.roles.includes(userRole)
+            ) || [];
+            
             return (
               <li key={item.href}>
                 <div>
-                  {hasChildren ? (
+                  {hasChildren && filteredChildren.length > 0 ? (
                     <button
                       onClick={() => toggleExpanded(item.title)}
                       className={cn(
-                        'flex items-center gap-3 w-full rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                        'flex items-center gap-3 w-full rounded-md px-3 py-2 text-sm font-medium transition-colors touch-target',
                         'hover:bg-accent hover:text-accent-foreground',
                         isActive && 'bg-accent text-accent-foreground'
                       )}
@@ -165,7 +198,7 @@ export function AdminSidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors touch-target',
                         'hover:bg-accent hover:text-accent-foreground',
                         isActive && 'bg-accent text-accent-foreground'
                       )}
@@ -177,9 +210,9 @@ export function AdminSidebar() {
                   )}
                 </div>
                 
-                {hasChildren && isExpanded && !collapsed && (
+                {hasChildren && isExpanded && !collapsed && filteredChildren.length > 0 && (
                   <ul className="mt-1 ml-6 space-y-1">
-                    {item.children.map((child) => {
+                    {filteredChildren.map((child) => {
                       const ChildIcon = child.icon;
                       const isChildActive = pathname === child.href;
                       
@@ -188,7 +221,7 @@ export function AdminSidebar() {
                           <Link
                             href={child.href}
                             className={cn(
-                              'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                              'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors touch-target',
                               'hover:bg-accent hover:text-accent-foreground',
                               isChildActive && 'bg-accent text-accent-foreground'
                             )}
