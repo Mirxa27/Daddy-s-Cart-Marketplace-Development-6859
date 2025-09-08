@@ -6,7 +6,14 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArrowRight, ShoppingBag, TrendingUp } from 'lucide-react';
 
-export function HeroSection() {
+interface HeroSectionProps {
+  stats?: {
+    totalOrders: number;
+    totalRevenue: number;
+  };
+}
+
+export function HeroSection({ stats }: HeroSectionProps) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="container-mobile mx-auto py-12 sm:py-16 lg:py-24">
@@ -53,8 +60,10 @@ export function HeroSection() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 pt-8">
               <div className="text-center lg:text-left">
-                <p className="text-2xl sm:text-3xl font-bold text-primary">10K+</p>
-                <p className="text-sm text-muted-foreground">Products</p>
+                <p className="text-2xl sm:text-3xl font-bold text-primary">
+                  {stats ? `${Math.floor(stats.totalOrders / 100)}K+` : '10K+'}
+                </p>
+                <p className="text-sm text-muted-foreground">Orders</p>
               </div>
               <div className="text-center lg:text-left">
                 <p className="text-2xl sm:text-3xl font-bold text-primary">500+</p>

@@ -16,8 +16,17 @@ import { Input } from '@/components/ui/input';
 import { getInitials } from '@/lib/utils';
 import Link from 'next/link';
 
-export function AdminHeader() {
-  const { data: session } = useSession();
+interface AdminHeaderProps {
+  user: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    role: string;
+  };
+}
+
+export function AdminHeader({ user }: AdminHeaderProps) {
 
   return (
     <header className="h-16 border-b bg-background px-4 sm:px-6 lg:px-8">
@@ -47,9 +56,9 @@ export function AdminHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
+                  <AvatarImage src={user.image || ''} alt={user.name || ''} />
                   <AvatarFallback>
-                    {getInitials(session?.user?.name || 'Admin')}
+                    {getInitials(user.name || 'Admin')}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -57,12 +66,12 @@ export function AdminHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{session?.user?.name}</p>
+                  <p className="text-sm font-medium leading-none">{user.name}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {session?.user?.email}
+                    {user.email}
                   </p>
                   <p className="text-xs leading-none text-primary font-medium mt-1">
-                    {session?.user?.role}
+                    {user.role}
                   </p>
                 </div>
               </DropdownMenuLabel>
